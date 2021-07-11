@@ -43,15 +43,7 @@
     },
     "rules": {
       "eqeqeq": "warn",
-      "prettier/prettier": "warn",
-      "no-unused-vars": [
-        "warn",
-        {
-          "vars": "all",
-          "args": "after-used",
-          "ignoreRestSiblings": false
-        }
-      ]
+      "prettier/prettier": "warn"
     }
   },
   "prettier": {
