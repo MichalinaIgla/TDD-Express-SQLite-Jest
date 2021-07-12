@@ -83,22 +83,6 @@ describe('User Registration', () => {
     expect(Object.keys(body.validationErrors)).toEqual(['username', 'email']);
   });
 
-  // it.each([
-  //   ['username', 'Username cannot be null'],
-  //   ['email', 'E-mail cannot be null'],
-  //   ['password', 'Password cannot be null'],
-  // ])('when %s is null %s is received', async (field, expectedMessage) => {
-  //   const user = {
-  //     username: 'user1',
-  //     email: 'user1@mail.com',
-  //     password: 'P4ssword',
-  //   };
-  //   user[field] = null;
-  //   const response = await postUser(user);
-  //   const body = response.body;
-  //   expect(body.validationErrors[field]).toBe(expectedMessage);
-  // });
-
   it.each`
     field         | value               | expectedMessage
     ${'username'} | ${null}             | ${'Username cannot be null'}
@@ -142,4 +126,22 @@ describe('User Registration', () => {
   //     'Must have min 4 and max 32 characters'
   //   );
   // });
+
+  it('returns E-mail in use when same email is already in use', async () => {
+    await User.create({ ...ValidUser });
+    const response = await postUser();
+    expect(response.body.validationErrors.email).toBe('Email in use');
+  });
+
+  it('returns errors for both username is null and email is in use', async () => {
+    await User.create({ ...ValidUser });
+    const response = await postUser({
+      username: null,
+      email: ValidUser.email,
+      password: 'P4ssword',
+    });
+
+    const body = response.body;
+    expect(Object.keys(body.validationErrors)).toEqual(['username', 'email']);
+  });
 });
