@@ -17,8 +17,12 @@ const ValidUser = {
   password: 'P4ssword',
 };
 
-const postUser = (user = ValidUser) => {
-  return request(app).post('/api/1.0/users').send(user);
+const postUser = (user = ValidUser, options = {}) => {
+  const agent = request(app).post('/api/1.0/users');
+  if (options.language) {
+    agent.set('Accept-Language', options.language);
+  }
+  return agent.send(user);
 };
 
 describe('User Registration', () => {
@@ -124,20 +128,6 @@ describe('User Registration', () => {
       expect(body.validationErrors[field]).toBe(expectedMessage);
     }
   );
-
-  // it('returns size validation error when username is less than 4 characters', async () => {
-  //   const user = {
-  //     username: 'usr',
-  //     email: 'user1@mail.com',
-  //     password: 'P4ssword',
-  //   };
-  //   const response = await postUser(user);
-  //   const body = response.body;
-  //   expect(body.validationErrors.username).toBe(
-  //     'Must have min 4 and max 32 characters'
-  //   );
-  // });
-
   it(`returns ${email_inuse} when same email is already in use`, async () => {
     await User.create({ ...ValidUser });
     const response = await postUser();
@@ -154,5 +144,54 @@ describe('User Registration', () => {
 
     const body = response.body;
     expect(Object.keys(body.validationErrors)).toEqual(['username', 'email']);
+  });
+});
+
+describe('Internationalization', () => {
+  const username_null = 'Nazwa użytkownika nie może być pusta';
+  const username_size = 'Musi mieć min 4 i max 32 znaki';
+  const email_null = 'E-mail nie może być pusty';
+  const email_invalid = 'E-mail nie jest prawidłowy';
+  const password_null = 'Hałso nie może być puste';
+  const password_size = 'Hasło musi miec przynajmniej 6 characters long';
+  const password_pattern =
+    'Hasło must have at least 1 uppercase, 1 lowercase letter and 1 number';
+  const email_inuse = 'Email w użyciu';
+
+  it.each`
+    field         | value              | expectedMessage
+    ${'username'} | ${null}            | ${username_null}
+    ${'username'} | ${'usr'}           | ${username_size}
+    ${'username'} | ${'a'.repeat(33)}  | ${username_size}
+    ${'email'}    | ${null}            | ${email_null}
+    ${'email'}    | ${'mail.com'}      | ${email_invalid}
+    ${'email'}    | ${'user.mail.com'} | ${email_invalid}
+    ${'email'}    | ${'user@mail'}     | ${email_invalid}
+    ${'password'} | ${null}            | ${password_null}
+    ${'password'} | ${'P4ssw'}         | ${password_size}
+    ${'password'} | ${'alllowercase'}  | ${password_pattern}
+    ${'password'} | ${'ALLUPPERCASE'}  | ${password_pattern}
+    ${'password'} | ${'1234567890'}    | ${password_pattern}
+    ${'password'} | ${'lowerandUPPER'} | ${password_pattern}
+    ${'password'} | ${'lower4nd5667'}  | ${password_pattern}
+    ${'password'} | ${'UPPER44444'}    | ${password_pattern}
+  `(
+    'returns $expectedMessage when $field is $value when language is set to Polish',
+    async ({ field, expectedMessage, value }) => {
+      const user = {
+        username: 'user1',
+        email: 'user1@mail.com',
+        password: 'P4ssword',
+      };
+      user[field] = value;
+      const response = await postUser(user, { language: 'pl' });
+      const body = response.body;
+      expect(body.validationErrors[field]).toBe(expectedMessage);
+    }
+  );
+  it(`returns ${email_inuse} when same email is already in use when language is set to Polish`, async () => {
+    await User.create({ ...ValidUser }, { language: 'pl' });
+    const response = await postUser();
+    expect(response.body.validationErrors.email).toBe(email_inuse);
   });
 });
