@@ -6,5 +6,6 @@
   "password_null": "Hałso nie może być puste",
   "password_size": "Hasło musi miec przynajmniej 6 characters long",
   "password_pattern": "Hasło must have at least 1 uppercase, 1 lowercase letter and 1 number",
-  "email_inuse": "Email w użyciu"
+  "email_inuse": "Email w użyciu",
+  "user_create_success": "Uzytkownik został stworzony poprawnie"
 }

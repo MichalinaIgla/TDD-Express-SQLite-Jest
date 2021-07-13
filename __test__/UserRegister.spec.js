@@ -157,6 +157,7 @@ describe('Internationalization', () => {
   const password_pattern =
     'Hasło must have at least 1 uppercase, 1 lowercase letter and 1 number';
   const email_inuse = 'Email w użyciu';
+  const user_create_success = 'Uzytkownik został stworzony poprawnie';
 
   it.each`
     field         | value              | expectedMessage
@@ -189,9 +190,15 @@ describe('Internationalization', () => {
       expect(body.validationErrors[field]).toBe(expectedMessage);
     }
   );
+
   it(`returns ${email_inuse} when same email is already in use when language is set to Polish`, async () => {
     await User.create({ ...ValidUser }, { language: 'pl' });
-    const response = await postUser();
+    const response = await postUser({ ...ValidUser }, { language: 'pl' });
     expect(response.body.validationErrors.email).toBe(email_inuse);
+  });
+
+  it(`returns success message of ${user_create_success} when signup request is valid`, async () => {
+    const response = await postUser();
+    expect(response.body.message).toBe(user_create_success);
   });
 });
