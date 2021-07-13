@@ -47,7 +47,7 @@ router.post(
       return res.send({ message: req.t('user_create_success') });
     } catch (err) {
       console.log(err);
-      return res.status(502).send();
+      return res.status(502).send({ message: req.t('email_failure') });
     }
   }
 );

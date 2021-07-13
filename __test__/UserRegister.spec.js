@@ -187,6 +187,15 @@ describe('User Registration', () => {
     expect(response.status).toBe(502);
     mockSendAccountActivation.mockRestore();
   });
+
+  it('returns Email failure message when sending email fails', async () => {
+    const mockSendAccountActivation = jest
+      .spyOn(EmailService, 'sendAccountActivation')
+      .mockRejectedValue({ message: 'Failed to deliver email' });
+    const response = await postUser();
+    mockSendAccountActivation.mockRestore();
+    expect(response.body.message).toBe('E-mail Failure');
+  });
 });
 
 describe('Internationalization', () => {
@@ -200,6 +209,7 @@ describe('Internationalization', () => {
     'Hasło must have at least 1 uppercase, 1 lowercase letter and 1 number';
   const email_inuse = 'Email w użyciu';
   const user_create_success = 'Uzytkownik został stworzony poprawnie';
+  const email_failure = 'Wystąpił błąd Email';
 
   it.each`
     field         | value              | expectedMessage
@@ -239,8 +249,17 @@ describe('Internationalization', () => {
     expect(response.body.validationErrors.email).toBe(email_inuse);
   });
 
-  it(`returns success message of ${user_create_success} when signup request is valid`, async () => {
+  it(`returns success message of ${user_create_success} when signup request is valid and is Polish`, async () => {
     const response = await postUser({ ...ValidUser }, { language: 'pl' });
     expect(response.body.message).toBe(user_create_success);
+  });
+
+  it(`returns ${email_failure} failure message when sending email fails and language is Polish`, async () => {
+    const mockSendAccountActivation = jest
+      .spyOn(EmailService, 'sendAccountActivation')
+      .mockRejectedValue({ message: 'Failed to deliver email' });
+    const response = await postUser({ ...ValidUser }, { language: 'pl' });
+    mockSendAccountActivation.mockRestore();
+    expect(response.body.message).toBe(email_failure);
   });
 });
