@@ -15,9 +15,10 @@
     "config": "^3.3.1",
     "express": "^4.17.1",
     "express-validator": "^6.5.0",
-    "i18next": "^19.4.5",
-    "i18next-fs-backend": "^1.0.6",
-    "i18next-http-middleware": "^2.1.2",
+    "i18next": "^20.3.2",
+    "i18next-fs-backend": "^1.1.1",
+    "i18next-http-middleware": "^3.1.4",
+    "nodemailer": "^6.6.2",
     "sequelize": "^5.21.12",
     "sqlite3": "^5.0.2"
   },
@@ -27,6 +28,7 @@
     "eslint-config-prettier": "^8.3.0",
     "eslint-plugin-prettier": "^3.4.0",
     "jest": "^27.0.6",
+    "nodemailer-stub": "^1.2.2",
     "nodemon": "^2.0.11",
     "prettier": "^2.0.5",
     "supertest": "^6.1.3"

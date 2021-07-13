@@ -2,6 +2,7 @@ const request = require('supertest');
 const app = require('../src/app');
 const User = require('../src/user/User');
 const sequelize = require('../src/config/database');
+const nodemailerStub = require('nodemailer-stub');
 
 beforeAll(() => {
   return sequelize.sync();
@@ -95,7 +96,7 @@ describe('User Registration', () => {
   const password_size = 'Password must be at least 6 characters long';
   const password_pattern =
     'Password must have at least 1 uppercase, 1 lowercase letter and 1 number';
-  const email_inuse = 'Email in use';
+  const email_inuse = 'E-mail in use';
 
   it.each`
     field         | value              | expectedMessage
@@ -144,6 +145,38 @@ describe('User Registration', () => {
 
     const body = response.body;
     expect(Object.keys(body.validationErrors)).toEqual(['username', 'email']);
+  });
+
+  it('creates user in inactive mode', async () => {
+    await postUser();
+    const users = await User.findAll();
+    const savedUser = users[0];
+    expect(savedUser.inactive).toBe(true);
+  });
+
+  it('creates user in inactive mode even the request body contains inactive as false', async () => {
+    const newUser = { ...ValidUser, inactive: false };
+    await postUser(newUser);
+    const users = await User.findAll();
+    const savedUser = users[0];
+    expect(savedUser.inactive).toBe(true);
+  });
+
+  it('creates an activationToken for user', async () => {
+    await postUser();
+    const users = await User.findAll();
+    const savedUser = users[0];
+    console.log(savedUser, savedUser.activationToken, 'TUUUUUUUU');
+    expect(savedUser.activationToken).toBeTruthy();
+  });
+
+  it('sends an Account activation email with activation token', async () => {
+    await postUser();
+    const lastMail = nodemailerStub.interactsWithMail.lastMail();
+    expect(lastMail.to[0]).toBe('user1@mail.com');
+    const users = await User.findAll();
+    const savedUser = users[0];
+    expect(lastMail.content).toContain(savedUser.activationToken);
   });
 });
 
@@ -198,7 +231,7 @@ describe('Internationalization', () => {
   });
 
   it(`returns success message of ${user_create_success} when signup request is valid`, async () => {
-    const response = await postUser();
+    const response = await postUser({ ...ValidUser }, { language: 'pl' });
     expect(response.body.message).toBe(user_create_success);
   });
 });
