@@ -21,8 +21,7 @@ i18next
     },
     (err, t) => {
       if (err) return console.error(err);
-      console.log(t('welcome'));
-      console.log(t('welcome', { lng: 'en' }));
+      console.log(t('welcome i18n'));
     }
   );
 

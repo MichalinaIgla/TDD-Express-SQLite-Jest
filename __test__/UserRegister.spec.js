@@ -166,7 +166,6 @@ describe('User Registration', () => {
     await postUser();
     const users = await User.findAll();
     const savedUser = users[0];
-    console.log(savedUser, savedUser.activationToken, 'TUUUUUUUU');
     expect(savedUser.activationToken).toBeTruthy();
   });
 
