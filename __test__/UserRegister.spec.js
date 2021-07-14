@@ -300,4 +300,52 @@ describe('Account activation', () => {
     users = await User.findAll();
     expect(users[0].inactive).toBe(false);
   });
+
+  it('removes the token from user table after successful activation', async () => {
+    await postUser();
+    let users = await User.findAll();
+    const token = users[0].activationToken;
+
+    await request(app)
+      .post('/api/1.0/users/token/' + token)
+      .send();
+    users = await User.findAll();
+    expect(users[0].activationToken).toBeFalsy();
+  });
+
+  it('does not activate the account when token is wrong', async () => {
+    await postUser();
+    const token = 'this-token-does-not-exist';
+    await request(app)
+      .post('/api/1.0/users/token/' + token)
+      .send();
+    const users = await User.findAll();
+    expect(users[0].inactive).toBe(true);
+  });
+
+  it('returns bad request when token is wrong', async () => {
+    await postUser();
+    const token = 'this-token-does-not-exist';
+    const response = await request(app)
+      .post('/api/1.0/users/token/' + token)
+      .send();
+    expect(response.status).toBe(400);
+  });
+
+  it.each`
+    language | message
+    ${'pl'}  | ${'Konto jest aktywne albo token jest niepoprawny'}
+    ${'en'}  | ${'This account is ethier active or the token is invalid'}
+  `(
+    'return $message when wron token is sent and language is $language',
+    async ({ language, message }) => {
+      await postUser();
+      const token = 'this-token-does-not-exist';
+      const response = await request(app)
+        .post('/api/1.0/users/token/' + token)
+        .set('Accept-Language', language)
+        .send();
+      expect(response.body.message).toBe(message);
+    }
+  );
 });
