@@ -333,14 +333,20 @@ describe('Account activation', () => {
   });
 
   it.each`
-    language | message
-    ${'pl'}  | ${'Konto jest aktywne albo token jest niepoprawny'}
-    ${'en'}  | ${'This account is ethier active or the token is invalid'}
+    language | tokenStatus  | message
+    ${'pl'}  | ${'wrong'}   | ${'Konto jest aktywne albo token jest niepoprawny'}
+    ${'en'}  | ${'wrong'}   | ${'This account is ethier active or the token is invalid'}
+    ${'pl'}  | ${'correct'} | ${'Konto jest aktywne'}
+    ${'en'}  | ${'correct'} | ${'Account is activated'}
   `(
-    'return $message when wron token is sent and language is $language',
-    async ({ language, message }) => {
+    'returns $message when token is $tokenStatus and language is $language',
+    async ({ language, tokenStatus, message }) => {
       await postUser();
-      const token = 'this-token-does-not-exist';
+      let token = 'this-token-does-not-exist';
+      if (tokenStatus === 'correct') {
+        let users = await User.findAll();
+        token = users[0].activationToken;
+      }
       const response = await request(app)
         .post('/api/1.0/users/token/' + token)
         .set('Accept-Language', language)
