@@ -2,8 +2,6 @@ const request = require('supertest');
 const app = require('../src/app');
 const User = require('../src/user/User');
 const sequelize = require('../src/config/database');
-// const nodemailerStub = require('nodemailer-stub');
-const EmailService = require('../src/email/EmailService');
 const SMTPServer = require('smtp-server').SMTPServer;
 
 let lastMail, server;
@@ -35,6 +33,7 @@ beforeAll(async () => {
 });
 
 beforeEach(() => {
+  simulateSmtpFailure = false;
   return User.destroy({ truncate: true });
 });
 
@@ -208,28 +207,19 @@ describe('User Registration', () => {
   });
 
   it('returns 502 Bad Gateway when sending email fails', async () => {
-    const mockSendAccountActivation = jest
-      .spyOn(EmailService, 'sendAccountActivation')
-      .mockRejectedValue({ message: 'Failed to deliver email' });
+    simulateSmtpFailure = true;
     const response = await postUser();
     expect(response.status).toBe(502);
-    mockSendAccountActivation.mockRestore();
   });
 
   it('returns Email failure message when sending email fails', async () => {
-    const mockSendAccountActivation = jest
-      .spyOn(EmailService, 'sendAccountActivation')
-      .mockRejectedValue({ message: 'Failed to deliver email' });
+    simulateSmtpFailure = true;
     const response = await postUser();
-    mockSendAccountActivation.mockRestore();
     expect(response.body.message).toBe('E-mail Failure');
   });
   it('does not save user to database if activation email fails', async () => {
-    const mockSendAccountActivation = jest
-      .spyOn(EmailService, 'sendAccountActivation')
-      .mockRejectedValue({ message: 'Failed to deliver email' });
+    simulateSmtpFailure = true;
     await postUser();
-    mockSendAccountActivation.mockRestore();
     const users = await User.findAll();
     expect(users.length).toBe(0);
   });
@@ -292,11 +282,22 @@ describe('Internationalization', () => {
   });
 
   it(`returns ${email_failure} failure message when sending email fails and language is Polish`, async () => {
-    const mockSendAccountActivation = jest
-      .spyOn(EmailService, 'sendAccountActivation')
-      .mockRejectedValue({ message: 'Failed to deliver email' });
+    simulateSmtpFailure = true;
     const response = await postUser({ ...ValidUser }, { language: 'pl' });
-    mockSendAccountActivation.mockRestore();
     expect(response.body.message).toBe(email_failure);
+  });
+});
+
+describe('Account activation', () => {
+  it('activates the account when correct token is sent', async () => {
+    await postUser();
+    let users = await User.findAll();
+    const token = users[0].activationToken;
+
+    await request(app)
+      .post('/api/1.0/users/token/' + token)
+      .send();
+    users = await User.findAll();
+    expect(users[0].inactive).toBe(false);
   });
 });
