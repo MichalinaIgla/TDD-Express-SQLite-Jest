@@ -19,7 +19,6 @@ const save = async (body) => {
     password: hash,
     activationToken: generateToken(16),
   };
-  console.log(email);
   const transaction = await sequelize.transaction();
   await User.create(user, { transaction });
   try {
