@@ -217,11 +217,21 @@ describe('User Registration', () => {
     const response = await postUser();
     expect(response.body.message).toBe('E-mail Failure');
   });
+
   it('does not save user to database if activation email fails', async () => {
     simulateSmtpFailure = true;
     await postUser();
     const users = await User.findAll();
     expect(users.length).toBe(0);
+  });
+
+  it('return Validation Failure message in error response body when validation fails', async () => {
+    const response = await postUser({
+      username: null,
+      email: ValidUser.email,
+      password: 'P4ssword',
+    });
+    expect(response.body.message).toBe('Validation Failure');
   });
 });
 
@@ -237,6 +247,7 @@ describe('Internationalization', () => {
   const email_inuse = 'Email w użyciu';
   const user_create_success = 'Uzytkownik został stworzony poprawnie';
   const email_failure = 'Wystąpił błąd Email';
+  const validation_failure = 'Nie udane';
 
   it.each`
     field         | value              | expectedMessage
@@ -285,6 +296,17 @@ describe('Internationalization', () => {
     simulateSmtpFailure = true;
     const response = await postUser({ ...ValidUser }, { language: 'pl' });
     expect(response.body.message).toBe(email_failure);
+  });
+  it(`return ${validation_failure} message in error response body when validation fails`, async () => {
+    const response = await postUser(
+      {
+        username: null,
+        email: ValidUser.email,
+        password: 'P4ssword',
+      },
+      { language: 'pl' }
+    );
+    expect(response.body.message).toBe(validation_failure);
   });
 });
 
@@ -354,4 +376,47 @@ describe('Account activation', () => {
       expect(response.body.message).toBe(message);
     }
   );
+});
+
+describe('Error Model', () => {
+  it('returns path, timestamp, message and validationErrors in response when validation failure', async () => {
+    const response = await postUser({ ...ValidUser, username: null });
+    const body = response.body;
+    expect(Object.keys(body)).toStrictEqual([
+      'path',
+      'timestamp',
+      'message',
+      'validationErrors',
+    ]);
+  });
+
+  it('returns path, timestamp, message in response when request fails other than validation error', async () => {
+    const token = 'this-token-does-not-exist';
+    const response = await request(app)
+      .post('/api/1.0/users/token/' + token)
+      .send();
+    const body = response.body;
+    expect(Object.keys(body)).toStrictEqual(['path', 'timestamp', 'message']);
+  });
+
+  it('returns path in error body', async () => {
+    const token = 'this-token-does-not-exist';
+    const response = await request(app)
+      .post('/api/1.0/users/token/' + token)
+      .send();
+    const body = response.body;
+    expect(body.path).toEqual('/api/1.0/users/token/' + token);
+  });
+
+  it('returns timestamp in miliseconds within 5 s value in error body', async () => {
+    const nowInMillis = new Date().getTime();
+    const fiveSecondsLater = nowInMillis + 5 * 1000;
+    const token = 'this-token-does-not-exist';
+    const response = await request(app)
+      .post('/api/1.0/users/token/' + token)
+      .send();
+    const body = response.body;
+    expect(body.timestamp).toBeGreaterThan(nowInMillis);
+    expect(body.timestamp).toBeLessThan(fiveSecondsLater);
+  });
 });
