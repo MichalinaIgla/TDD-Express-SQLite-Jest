@@ -20,9 +20,9 @@ i18next
         lookupHeader: 'accept-language',
       },
     },
-    (err, t) => {
+    (err) => {
       if (err) return console.error(err);
-      console.log(t('welcome i18n'));
+      // console.log(t('welcome i18n'));
     }
   );
 
