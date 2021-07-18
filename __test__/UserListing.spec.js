@@ -60,4 +60,12 @@ describe('Listing Users', () => {
     console.log(user);
     expect(Object.keys(user)).toEqual(['id', 'username', 'email']);
   });
+
+  it('returns 2 as totalPages when there are 15 active and 7 inactive users', async () => {
+    await addUsers(15, 7);
+    const response = await getUsers();
+    const user = response.body.content[0];
+    console.log(user);
+    expect(response.body.totalPages).toBe(2);
+  });
 });
