@@ -65,7 +65,11 @@ router.get('/api/1.0/users', async (req, res) => {
   if (page < 0) {
     page = 0;
   }
-  const users = await UserService.getUsers(page);
+  let size = req.query.size ? Number.parseInt(req.query.size) : 10;
+  if (size > 10 || size < 1) {
+    size = 10;
+  }
+  const users = await UserService.getUsers(page, req.query.size);
   res.send(users);
 });
 
