@@ -140,7 +140,7 @@ describe('Get Users', () => {
     expect(Object.keys(error)).toEqual(['path', 'timestamp', 'message']);
   });
 
-  it('returns proper error body when user not found', async () => {
+  it('returns 200 when an active user exists', async () => {
     const user = await User.create({
       username: 'user1',
       email: 'user1@mail.com',
@@ -148,5 +148,25 @@ describe('Get Users', () => {
     });
     const response = await getUser(user.id);
     expect(response.status).toBe(200);
+  });
+
+  it('returns id, username and email in response body when an active user exists', async () => {
+    const user = await User.create({
+      username: 'user1',
+      email: 'user1@mail.com',
+      inactive: false,
+    });
+    const response = await getUser(user.id);
+    expect(Object.keys(response.body)).toEqual(['id', 'username', 'email']);
+  });
+
+  it('returns 404 when the user is inactive', async () => {
+    const user = await User.create({
+      username: 'user1',
+      email: 'user1@mail.com',
+      inactive: true,
+    });
+    const response = await getUser(user.id);
+    expect(response.status).toBe(404);
   });
 });

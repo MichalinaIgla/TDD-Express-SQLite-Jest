@@ -4,7 +4,6 @@ const router = express.Router();
 const { check, validationResult } = require('express-validator');
 const ValidationException = require('../error/ValidationException');
 const pagination = require('../middleware/pagination');
-const User = require('./User');
 
 router.post(
   '/api/1.0/users',
@@ -70,8 +69,8 @@ router.get('/api/1.0/users', pagination, async (req, res) => {
 
 router.get('/api/1.0/users/:id', async (req, res, next) => {
   try {
-    await UserService.getUser(req.params.id);
-    res.send();
+    const user = await UserService.getUser(req.params.id);
+    res.send(user);
   } catch (err) {
     next(err);
   }

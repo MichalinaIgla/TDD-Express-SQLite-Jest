@@ -61,7 +61,10 @@ const getUsers = async (page, size) => {
 };
 
 const getUser = async (id) => {
-  const user = await User.findOne({ where: { id: id } });
+  const user = await User.findOne({
+    where: { id: id, inactive: false },
+    attributes: ['id', 'username', 'email'],
+  });
   if (!user) {
     throw new UserNotFoundException();
   }
