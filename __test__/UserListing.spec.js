@@ -108,3 +108,45 @@ describe('Listing Users', () => {
     expect(response.body.page).toBe(0);
   });
 });
+
+describe('Get Users', () => {
+  const getUser = (id = 5) => {
+    return request(app).get('/api/1.0/users/' + id);
+  };
+
+  it('returns 404 when user not found', async () => {
+    const response = await getUser();
+    expect(response.status).toBe(404);
+  });
+
+  it.each`
+    language | message
+    ${'pl'}  | ${'Nie znaleziono uzytkownika'}
+    ${'en'}  | ${'User not found'}
+  `(
+    'returns $message for unknown user when language is set to $language',
+    async ({ language, message }) => {
+      const response = await getUser().set('Accept-Language', language);
+      expect(response.body.message).toBe(message);
+    }
+  );
+
+  it('returns proper error body when user not found', async () => {
+    const nowInMillis = new Date().getTime();
+    const response = await getUser();
+    const error = response.body;
+    expect(error.path).toBe('/api/1.0/users/5');
+    expect(error.timestamp).toBeGreaterThan(nowInMillis);
+    expect(Object.keys(error)).toEqual(['path', 'timestamp', 'message']);
+  });
+
+  it('returns proper error body when user not found', async () => {
+    const user = await User.create({
+      username: 'user1',
+      email: 'user1@mail.com',
+      inactive: false,
+    });
+    const response = await getUser(user.id);
+    expect(response.status).toBe(200);
+  });
+});
