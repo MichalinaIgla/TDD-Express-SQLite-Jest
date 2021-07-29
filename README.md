@@ -21,9 +21,9 @@ List the ready features here:
 ## Usage
 
 To run: 
-| npm run
+`npm run`
 
 To test:
-| npm test
+`npm test`
 
 
