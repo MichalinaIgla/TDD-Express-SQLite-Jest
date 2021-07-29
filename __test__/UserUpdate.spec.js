@@ -71,4 +71,33 @@ describe('User update', () => {
     });
     expect(response.status).toBe(403);
   });
+
+  it('returns forbidden when request sent incorrect password in basic authorization', async () => {
+    await addUser();
+    const response = await putUser(5, null, {
+      auth: { email: 'user1@mail.com', password: 'password' },
+    });
+    expect(response.status).toBe(403);
+  });
+
+  it('returns forbidden when update request is sent with correct credentials but for different user', async () => {
+    await addUser();
+    const userToBeUpdated = await addUser({
+      ...activeUser,
+      username: 'user2',
+      email: 'user2@mail.com',
+    });
+    const response = await putUser(userToBeUpdated.id, null, {
+      auth: { email: 'user1@mail.com', password: 'P4ssword' },
+    });
+    expect(response.status).toBe(403);
+  });
+
+  it('returns forbidden when update request is sent by inactive user with correct credentials for its own user', async () => {
+    const inactiveUser = await addUser({ ...activeUser, inactive: true });
+    const response = await putUser(inactiveUser.id, null, {
+      auth: { email: 'user1@mail.com', password: 'P4ssword' },
+    });
+    expect(response.status).toBe(403);
+  });
 });
