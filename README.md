@@ -18,6 +18,7 @@ Backend Rest Application with express.js using Test Driven Development
 ## Features
 List the ready features here:
 - Login / Register
+- Update User
 
 ## Usage
 
