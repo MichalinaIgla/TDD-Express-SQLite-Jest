@@ -14,5 +14,6 @@
   "validation_failure": "Nie udane",
   "user_not_found": "Nie znaleziono uzytkownika",
   "authentication_failure": "Nie poprawne dane",
-  "inactive_authentication_failure": "Konto jest nie aktywne"
+  "inactive_authentication_failure": "Konto jest nie aktywne",
+  "unauthenticated_user_update": "Nie mozesz zmienic tego uzytkownika"
 }
