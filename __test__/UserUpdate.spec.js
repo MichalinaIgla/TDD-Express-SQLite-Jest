@@ -27,19 +27,28 @@ const addUser = async (user = { ...activeUser }) => {
   return await User.create(user);
 };
 
-const putUser = (id = 5, body = null, options = {}) => {
-  const agent = request(app).put('/api/1.0/users/' + id);
+const putUser = async (id = 5, body = null, options = {}) => {
+  let agent = request(app);
+  let token;
+  if (options.auth) {
+    // // Authorization: Basic dxN ...,
+    // // const merged = `${email}:${password}`;
+    // // const base64 = Buffer.from(merged).toString('base64');
+    // // agent.set('Authorization', `Basic ${base64}`);
+    // const { email, password } = options.auth;
+    // agent.auth(email, password);
+    const response = await agent.post('/api/1.0/auth').send(options.auth);
+    token = response.body.token;
+  }
+
+  agent = request(app).put('/api/1.0/users/' + id);
   if (options.language) {
     agent.set('Accept-Language', options.language);
   }
-  if (options.auth) {
-    // Authorization: Basic dxN ...,
-    // const merged = `${email}:${password}`;
-    // const base64 = Buffer.from(merged).toString('base64');
-    // agent.set('Authorization', `Basic ${base64}`);
-    const { email, password } = options.auth;
-    agent.auth(email, password);
+  if (token) {
+    agent.set('Authorization', `Bearer ${token}`);
   }
+
   return agent.send(body);
 };
 
