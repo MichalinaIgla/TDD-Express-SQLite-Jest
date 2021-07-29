@@ -21,7 +21,7 @@ List the ready features here:
 ## Usage
 
 To run: 
-`npm run`
+`npm start`
 
 To test:
 `npm test`
