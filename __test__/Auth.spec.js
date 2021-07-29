@@ -134,4 +134,18 @@ describe('Authentication', () => {
       expect(response.body.message).toBe(message);
     }
   );
+
+  it('returns 401 when email is not valid', async () => {
+    const response = await postAuthentication({
+      password: 'P4ssword',
+    });
+    expect(response.status).toBe(401);
+  });
+
+  it('returns 401 when email is not valid', async () => {
+    const response = await postAuthentication({
+      password: 'P4ssword',
+    });
+    expect(response.status).toBe(401);
+  });
 });
